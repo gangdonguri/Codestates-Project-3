@@ -13,7 +13,7 @@ const connectDb = async (req, res, next) => {
     req.conn = await mysql.createConnection({ host, user, password, database })
     next()
   }
-  catch(e) {
+  catch (e) {
     console.log(e)
     res.status(500).json({ message: "데이터베이스 연결 오류" })
   }

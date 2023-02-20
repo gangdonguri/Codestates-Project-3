@@ -1,5 +1,7 @@
 service: sales-api
 frameworkVersion: '3'
+plugins:
+  - serverless-dotenv-plugin
 
 provider:
   name: aws
@@ -10,4 +12,10 @@ functions:
   api:
     handler: handler.handler
     events:
-      - httpApi: '*'
+      - httpApi: 'GET /product/donut'
+      - httpApi: 'POST /checkout'
+    # environment:
+    #   HOSTNAME: ${env:HOSTNAME}
+    #   USERNAME: ${env:USERNAME}
+    #   PASSWORD: ${env:PASSWORD}
+    #   DATABASE: ${env:DATABASE}
