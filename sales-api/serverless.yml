@@ -13,8 +13,51 @@ resources:
     StockEmpty:
       Type: "AWS::SNS::Topic"
       Properties:
-        TopicName: stock-empty.fifo
-        FifoTopic: true
+        TopicName: stock-empty
+        # FifoTopic: true
+
+    StockQueue:
+      Type: "AWS::SQS::Queue"
+      Properties:
+        QueueName: stock-queue
+        # FifoQueue: true
+        RedrivePolicy:
+          deadLetterTargetArn:
+            Fn::GetAtt: [StockQueueDeadLetterQueue, Arn]
+          maxReceiveCount: 3
+
+    StockQueueDeadLetterQueue:
+      Type: "AWS::SQS::Queue"
+      Properties:
+        QueueName: stock-queue-dlq
+        # FifoQueue: true
+
+    StockQueueSubscription:
+      Type: "AWS::SNS::Subscription"
+      Properties:
+        TopicArn: !Ref StockEmpty
+        Endpoint:
+          Fn::GetAtt: [StockQueue, Arn]
+        Protocol: sqs
+        RawMessageDelivery: "true"
+
+    StockQueuePolicy:
+      Type: AWS::SQS::QueuePolicy
+      Properties:
+        PolicyDocument:
+          Version: "2012-10-17"
+          Statement:
+            - Effect: "Allow"
+              Principal: "*"
+              Action:
+                - "SQS:SendMessage"
+              Resource:
+                - Fn::GetAtt: [StockQueue, Arn]
+              Condition:
+                ArnEquals:
+                  AWS:SourceArn: !Ref StockEmpty
+        Queues:
+          - !Ref StockQueue
   Outputs:
     StockEmptyArn:
       Value: !Ref StockEmpty
@@ -32,3 +75,11 @@ functions:
         type: sns
         arn:
           Ref: StockEmpty
+
+  factory-api:
+    handler: index.consumer
+    events:
+      - sqs:
+          arn:
+            Fn::GetAtt: [StockQueue, Arn]
+          batchSize: 10
