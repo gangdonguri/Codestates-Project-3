@@ -6,13 +6,32 @@ app.use(express.json())
 const AWS = require("aws-sdk") // STEP 2
 const sns = new AWS.SNS({ region: "ap-northeast-2" }) // STEP 2
 
+// const cloudformation = new AWS.CloudFormation({ region: "ap-northeast-2" });
+// const stackName = 'sales-api-dev';
+// const outputKey = 'StockEmptyArn';
+
+// const params = {
+//   StackName: stackName
+// };
+
+// let TopicArn;
+
+// cloudformation.describeStacks(params, function (err, data) {
+//   if (err) console.log(err, err.stack);
+//   else {
+//     const outputs = data.Stacks[0].Outputs;
+//     const output = outputs.find(output => output.OutputKey === outputKey);
+//     TopicArn = output.OutputValue;
+//   }
+// });
+
 const {
   connectDb,
   queries: { getProduct, setStock }
 } = require('./database')
 
 app.get("/product/donut", connectDb, async (req, res, next) => {
-  const [ result ] = await req.conn.query(
+  const [result] = await req.conn.query(
     getProduct('CP-502101')
   )
 
@@ -25,18 +44,43 @@ app.get("/product/donut", connectDb, async (req, res, next) => {
 });
 
 app.post("/checkout", connectDb, async (req, res, next) => {
-  const [ result ] = await req.conn.query(
+  const [result] = await req.conn.query(
     getProduct('CP-502101')
   )
   if (result.length > 0) {
     const product = result[0]
     if (product.stock > 0) {
       await req.conn.query(setStock(product.product_id, product.stock - 1))
-      return res.status(200).json({ message: `구매 완료! 남은 재고: ${product.stock - 1}`});
+      return res.status(200).json({ message: `구매 완료! 남은 재고: ${product.stock - 1}` });
     }
     else {
+      try {
+        console.log("StockEmptyArn: ", process.env.StockEmptyArn)
+        const now = new Date().toString()
+        const message = `도너츠 재고가 없습니다. 제품을 생산해주세요! \n메시지 작성 시각: ${now}`
+        const params = {
+          Message: message,
+          Subject: '도너츠 재고 부족',
+          MessageAttributes: {
+            MessageAttributeProductId: {
+              StringValue: product.product_id,
+              DataType: "String",
+            },
+            MessageAttributeFactoryId: {
+              StringValue: product.factory_id,
+              DataType: "String",
+            },
+          },
+          TopicArn: process.env.TOPIC_ARN
+        }
+
+        const result = await sns.publish(params).promise()
+      }
+      catch (e) {
+        console.log(e)
+      }
       await req.conn.end()
-      return res.status(200).json({ message: `구매 실패! 남은 재고: ${product.stock}`});
+      return res.status(200).json({ message: `구매 실패! 남은 재고: ${product.stock}` });
     }
   } else {
     await req.conn.end()

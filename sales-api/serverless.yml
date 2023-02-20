@@ -1,5 +1,5 @@
 service: sales-api
-frameworkVersion: '3'
+frameworkVersion: "3"
 plugins:
   - serverless-dotenv-plugin
 
@@ -8,14 +8,27 @@ provider:
   runtime: nodejs14.x
   region: ap-northeast-2
 
+resources:
+  Resources:
+    StockEmpty:
+      Type: "AWS::SNS::Topic"
+      Properties:
+        TopicName: stock-empty.fifo
+        FifoTopic: true
+  Outputs:
+    StockEmptyArn:
+      Value: !Ref StockEmpty
+      Export:
+        Name: StockEmptyArn
+
 functions:
-  api:
+  sales-api:
     handler: handler.handler
     events:
-      - httpApi: 'GET /product/donut'
-      - httpApi: 'POST /checkout'
-    # environment:
-    #   HOSTNAME: ${env:HOSTNAME}
-    #   USERNAME: ${env:USERNAME}
-    #   PASSWORD: ${env:PASSWORD}
-    #   DATABASE: ${env:DATABASE}
+      - httpApi: "GET /product/donut"
+      - httpApi: "POST /checkout"
+    destinations:
+      onSuccess:
+        type: sns
+        arn:
+          Ref: StockEmpty
