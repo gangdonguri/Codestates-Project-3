@@ -6,25 +6,6 @@ app.use(express.json())
 const AWS = require("aws-sdk") // STEP 2
 const sns = new AWS.SNS({ region: "ap-northeast-2" }) // STEP 2
 
-// const cloudformation = new AWS.CloudFormation({ region: "ap-northeast-2" });
-// const stackName = 'sales-api-dev';
-// const outputKey = 'StockEmptyArn';
-
-// const params = {
-//   StackName: stackName
-// };
-
-// let TopicArn;
-
-// cloudformation.describeStacks(params, function (err, data) {
-//   if (err) console.log(err, err.stack);
-//   else {
-//     const outputs = data.Stacks[0].Outputs;
-//     const output = outputs.find(output => output.OutputKey === outputKey);
-//     TopicArn = output.OutputValue;
-//   }
-// });
-
 const {
   connectDb,
   queries: { getProduct, setStock }
@@ -55,19 +36,27 @@ app.post("/checkout", connectDb, async (req, res, next) => {
     }
     else {
       try {
-        console.log("StockEmptyArn: ", process.env.StockEmptyArn)
         const now = new Date().toString()
         const message = `도너츠 재고가 없습니다. 제품을 생산해주세요! \n메시지 작성 시각: ${now}`
         const params = {
           Message: message,
           Subject: '도너츠 재고 부족',
+          MessageGroupId: "Out-of-stock",
           MessageAttributes: {
             MessageAttributeProductId: {
-              StringValue: product.product_id,
+              StringValue: req.body.MessageAttributeProductId,
+              DataType: "String",
+            },
+            MessageAttributeProductCnt: {
+              StringValue: req.body.MessageAttributeProductCnt,
               DataType: "String",
             },
             MessageAttributeFactoryId: {
-              StringValue: product.factory_id,
+              StringValue: req.body.MessageAttributeFactoryId,
+              DataType: "String",
+            },
+            MessageAttributeRequester: {
+              StringValue: req.body.MessageAttributeRequester,
               DataType: "String",
             },
           },

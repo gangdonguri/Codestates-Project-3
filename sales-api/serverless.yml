@@ -13,14 +13,16 @@ resources:
     StockEmpty:
       Type: "AWS::SNS::Topic"
       Properties:
-        TopicName: stock-empty
-        # FifoTopic: true
+        TopicName: stock-empty.fifo
+        FifoTopic: true
+        ContentBasedDeduplication: true
 
     StockQueue:
       Type: "AWS::SQS::Queue"
       Properties:
-        QueueName: stock-queue
-        # FifoQueue: true
+        QueueName: stock-queue.fifo
+        FifoQueue: true
+        ContentBasedDeduplication: true
         RedrivePolicy:
           deadLetterTargetArn:
             Fn::GetAtt: [StockQueueDeadLetterQueue, Arn]
@@ -29,8 +31,9 @@ resources:
     StockQueueDeadLetterQueue:
       Type: "AWS::SQS::Queue"
       Properties:
-        QueueName: stock-queue-dlq
-        # FifoQueue: true
+        QueueName: stock-queue-dlq.fifo
+        FifoQueue: true
+        ContentBasedDeduplication: true
 
     StockQueueSubscription:
       Type: "AWS::SNS::Subscription"
@@ -58,6 +61,7 @@ resources:
                   AWS:SourceArn: !Ref StockEmpty
         Queues:
           - !Ref StockQueue
+
   Outputs:
     StockEmptyArn:
       Value: !Ref StockEmpty
@@ -75,6 +79,8 @@ functions:
         type: sns
         arn:
           Ref: StockEmpty
+    environment:
+      TOPIC_ARN: !Ref StockEmpty
 
   factory-api:
     handler: index.consumer

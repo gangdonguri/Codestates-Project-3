@@ -1,5 +1,7 @@
 service: stock-increase-lambda
-frameworkVersion: '3'
+frameworkVersion: "3"
+plugins:
+  - serverless-dotenv-plugin
 
 provider:
   name: aws
@@ -10,4 +12,4 @@ functions:
   api:
     handler: handler.handler
     events:
-      - httpApi: '*'
+      - httpApi: "POST /product/donut"
