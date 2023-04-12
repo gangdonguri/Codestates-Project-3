@@ -1,28 +1,30 @@
-## 목표
-- 메시지 큐의 Pub/Sub 패턴과 Producer/Consumer 패턴의 차이를 이해한다
-- DB와 서버와의 통신이 가능하도록 연결한다
-- 특정 상황에서 SNS, SQS로 메세지가 전달되도록 시스템을 구성한다
-- SQS에 들어온 메세지를 레거시 시스템(Factory API)으로 전달하는 시스템을 구성한다
-- 레거시 시스템(Factory API)의 콜백 대상이되는 리소스를 생성해 데이터베이스에 접근 할 수 있게 한다
+## ✨ 프로젝트 소개
 
-## Step 1 : Lambda 서버(Sales API) - DB 연결
+### 마이크로서비스
 
-![step1](https://contents-img-jeonghun.s3.ap-northeast-2.amazonaws.com/project3/project3-project-step1.png)
+AWS 클라우드 환경을 기반으로 하는 느슨하게 연결된(loosely coupled) 애플리케이션 아키텍처 구성
+- Serverless 를 이용한 메세지 대기열 활용 이해 및 구현
+- 문제사항 해결을 위한 추가 리소스 생성 → DLQ, Legacy 시스템 성능문제 해결
+- 인프라 관리와 재사용성을 위한 IaC 활용 → Terraform을 통한 리소스생성
 
-> **✅ 확인 포인트: 요청시 재고 감소 로그 / 재고 0 도달 → 재고없음 로그**
+<br>
 
-## Step 2 : “재고없음” 메세지 전달 시스템 구성
-![step2](https://contents-img-jeonghun.s3.ap-northeast-2.amazonaws.com/project3/project3-project-step2.png)
+## 📆 프로젝트 기간
+- 개발 기간: 2023/02/17 ~ 2023/02/22
+- 추가 업데이트: 2023/02/22 ~ 진행 중
 
-> **✅ 확인 포인트 : 재고가 없는 경우 stock_queue에 메세지가 들어온 것을 확인**
+<br>
+ 
+## 📖 서비스 아키텍처
+![image](https://user-images.githubusercontent.com/87158339/231326732-2cf2578c-e2e7-43fc-9838-6306812e3e09.png)
 
-## Step 3 : 메세지를 레거시 시스템(Factory API)로 보내줄 Lambda 구성 및 DLQ 추가
-![step3](https://contents-img-jeonghun.s3.ap-northeast-2.amazonaws.com/project3/project3-project-step3.png)
+<br>
 
-> **✅ 확인 포인트 : stock_queue에서 메세지 사라짐, stock_lambda에서 생성된 로그 확인**
-
-## Step 4 : 데이터베이스의 재고를 증가시키는 Lambda 함수 생성
-
-_(최종 아키텍처 다이어그램은 직접 그려서 제출해야 합니다. `diagram.png` 와 같이 파일을 추가하세요.)_
-
-> **✅ 확인 포인트 : 재고 없음 메세지 전송 → 일정 시간 이후 다시 요청시 재고감소 작동**
+## 🔧 기술 스택
+<p align="center">
+<img src="https://img.shields.io/badge/Terraform-7B42BC?style=for-the-badge&logo=Terraform&logoColor=white"> 
+<img src="https://img.shields.io/badge/Amazon AWS-232F3E?style=for-the-badge&logo=Amazon AWS&logoColor=white">
+<img src="https://img.shields.io/badge/JavaScript-F7DF1E?style=for-the-badge&logo=JavaScript&logoColor=black">
+<img src="https://img.shields.io/badge/Serverless-FD5750?style=for-the-badge&logo=Serverless&logoColor=white">
+<img src="https://img.shields.io/badge/MySQL-4479A1?style=for-the-badge&logo=MySQL&logoColor=white">
+ </p>
